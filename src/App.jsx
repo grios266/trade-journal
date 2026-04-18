@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 // ─── PASTE YOUR SUPABASE CREDENTIALS HERE ───────────────────────────────────
 const SUPABASE_URL = "https://xddcxzancmbdzrtljjfb.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhkZGN4emFuY21iZHpydGxqamZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0Njg4MzUsImV4cCI6MjA5MjA0NDgzNX0.ZNRn_9yOHTXcrslU6AodTHTNJ2AeWlBrdIXa6U3Jcxo"
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhkZGN4emFuY21iZHpydGxqamZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0Njg4MzUsImV4cCI6MjA5MjA0NDgzNX0.ZNRn_9yOHTXcrslU6AodTHTNJ2AeWlBrdIXa6U3Jcxo";
 // ─────────────────────────────────────────────────────────────────────────────
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -643,23 +643,65 @@ export default function App() {
               <div>
                 <div className="card" style={{marginBottom:16}}>
                   <div style={{fontSize:11,color:"#64748b",letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:16}}>Trade Planner</div>
-                  <div style={{display:"flex",gap:8,marginBottom:14}}>
-                    {["stock","option"].map(t=>(
-                      <button key={t} className="btn" onClick={()=>setPlanner(p=>({...p,type:t}))}
-                        style={{background:planner.type===t?"#1e293b":"transparent",color:planner.type===t?"#e2e8f0":"#475569",border:`1px solid ${planner.type===t?"#3b82f6":"#1e2d4d"}`,fontSize:11,flex:1,padding:"7px 0",letterSpacing:1}}>
-                        {t==="stock"?"📈 Stock":"⚡ Option"}
-                      </button>
-                    ))}
+                  {/* Type toggle */}
+                  <div style={{display:"flex",gap:8,marginBottom:16}}>
+                    <button onClick={()=>setPlanner(p=>({...p,type:"stock"}))}
+                      style={{flex:1,padding:"10px 0",border:`2px solid ${planner.type==="stock"?"#3b82f6":"#1e2d4d"}`,borderRadius:8,background:planner.type==="stock"?"#0f2040":"transparent",color:planner.type==="stock"?"#60a5fa":"#475569",fontFamily:"inherit",fontSize:12,fontWeight:700,cursor:"pointer",letterSpacing:1}}>
+                      📈 STOCK
+                    </button>
+                    <button onClick={()=>setPlanner(p=>({...p,type:"option"}))}
+                      style={{flex:1,padding:"10px 0",border:`2px solid ${planner.type==="option"?"#a78bfa":"#1e2d4d"}`,borderRadius:8,background:planner.type==="option"?"#1a0f40":"transparent",color:planner.type==="option"?"#a78bfa":"#475569",fontFamily:"inherit",fontSize:12,fontWeight:700,cursor:"pointer",letterSpacing:1}}>
+                      ⚡ OPTION
+                    </button>
                   </div>
-                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-                    <div><label>Side</label><select name="side" value={planner.side} onChange={handlePlanner}><option value="buy">Buy / Long</option><option value="sell">Sell / Short</option></select></div>
-                    <div><label>Entry Price</label><input name="entry" type="number" value={planner.entry} onChange={handlePlanner} placeholder="150.00"/></div>
-                    <div><label>Stop Loss</label><input name="stop" type="number" value={planner.stop} onChange={handlePlanner} placeholder="145.00"/></div>
-                    <div><label>Price Target</label><input name="target" type="number" value={planner.target} onChange={handlePlanner} placeholder="165.00"/></div>
-                    {planner.type==="stock"
-                      ?<div style={{gridColumn:"1/-1"}}><label>Shares</label><input name="qty" type="number" value={planner.qty} onChange={handlePlanner} placeholder="100"/></div>
-                      :<div style={{gridColumn:"1/-1"}}><label>Contracts</label><input name="contracts" type="number" value={planner.contracts} onChange={handlePlanner} placeholder="2"/></div>}
-                  </div>
+
+                  {/* STOCK fields */}
+                  {planner.type==="stock" && (
+                    <div>
+                      <div style={{fontSize:10,color:"#3b82f6",letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:10,paddingBottom:6,borderBottom:"1px solid #0f2040"}}>📈 Stock Parameters</div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                        <div><label>Side</label><select name="side" value={planner.side} onChange={handlePlanner}><option value="buy">Buy / Long</option><option value="sell">Sell / Short</option></select></div>
+                        <div><label>Shares</label><input name="qty" type="number" value={planner.qty} onChange={handlePlanner} placeholder="100"/></div>
+                        <div><label>Entry Price ($)</label><input name="entry" type="number" value={planner.entry} onChange={handlePlanner} placeholder="150.00"/></div>
+                        <div><label>Stop Loss ($)</label><input name="stop" type="number" value={planner.stop} onChange={handlePlanner} placeholder="145.00"/></div>
+                        <div style={{gridColumn:"1/-1"}}><label>Price Target ($)</label><input name="target" type="number" value={planner.target} onChange={handlePlanner} placeholder="165.00"/></div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* OPTION fields */}
+                  {planner.type==="option" && (
+                    <div>
+                      <div style={{fontSize:10,color:"#a78bfa",letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:10,paddingBottom:6,borderBottom:"1px solid #1a0f40"}}>⚡ Option Parameters</div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                        <div><label>Option Type</label>
+                          <select name="optionType" value={planner.optionType||"call"} onChange={handlePlanner}>
+                            <option value="call">Call</option>
+                            <option value="put">Put</option>
+                            <option value="spread">Spread</option>
+                          </select>
+                        </div>
+                        <div><label>Side</label><select name="side" value={planner.side} onChange={handlePlanner}><option value="buy">Buy</option><option value="sell">Sell</option></select></div>
+                        <div><label>Strategy</label>
+                          <select name="strategy" value={planner.strategy||"Long Call"} onChange={handlePlanner}>
+                            {OPTION_STRATEGIES.map(s=><option key={s} value={s}>{s}</option>)}
+                          </select>
+                        </div>
+                        <div><label>Contracts</label><input name="contracts" type="number" value={planner.contracts} onChange={handlePlanner} placeholder="2"/></div>
+                        <div><label>Strike Price ($)</label><input name="strike" type="number" value={planner.strike||""} onChange={handlePlanner} placeholder="150"/></div>
+                        <div><label>Expiry Date</label><input name="expiry" type="date" value={planner.expiry||""} onChange={handlePlanner}/></div>
+                        <div><label>Entry Premium (per contract)</label><input name="entry" type="number" value={planner.entry} onChange={handlePlanner} placeholder="3.50"/></div>
+                        <div><label>Stop Loss (premium)</label><input name="stop" type="number" value={planner.stop} onChange={handlePlanner} placeholder="1.50"/></div>
+                        <div style={{gridColumn:"1/-1"}}><label>Target Premium (per contract)</label><input name="target" type="number" value={planner.target} onChange={handlePlanner} placeholder="7.00"/></div>
+                      </div>
+                      {planner.strike && planner.expiry && (
+                        <div style={{marginTop:10,padding:"8px 12px",background:"#0d1424",borderRadius:6,fontSize:11,color:"#a78bfa"}}>
+                          {(planner.optionType||"call").toUpperCase()} @ ${planner.strike} exp {planner.expiry}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
                   <div style={{marginTop:16,display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
                     {[
                       {label:"Max Risk $",value:pRisk!==null?fmt(pRisk):"—",cls:"neg"},
