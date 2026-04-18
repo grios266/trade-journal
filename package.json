@@ -1,60 +1,19 @@
-# Trade Journal — Setup Instructions
-
-## What's in this folder
-- `src/App.jsx` — the full app
-- `src/index.js` — React entry point
-- `public/index.html` — HTML shell
-- `package.json` — dependencies
-
----
-
-## Step 1 — Add your Supabase credentials
-Open `src/App.jsx` in any text editor (Notepad, TextEdit, VS Code).
-Find these two lines near the top and replace them:
-
-```
-const SUPABASE_URL = "YOUR_SUPABASE_URL";
-const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
-```
-
-Get these values from: supabase.com → your project → Settings → API
-
----
-
-## Step 2 — Create the database table
-In Supabase go to SQL Editor and run:
-
-```sql
-create table trades (
-  id uuid default gen_random_uuid() primary key,
-  user_id uuid references auth.users not null,
-  type text, date text, ticker text, side text,
-  qty text, price text, close_price text, fees text,
-  strategy text, expiry text, strike text,
-  option_type text, contracts text, premium text,
-  close_premium text, notes text, status text,
-  stop_loss text, target text,
-  created_at timestamptz default now()
-);
-
-alter table trades enable row level security;
-
-create policy "Users manage own trades" on trades
-  for all using (auth.uid() = user_id);
-```
-
----
-
-## Step 3 — Deploy to Vercel (free, no coding needed)
-
-1. Go to github.com → sign up free → click "New repository" → name it "trade-journal" → click Create
-2. Upload all files from this folder (drag and drop them into GitHub)
-3. Go to vercel.com → sign up free → "Add New Project" → Import your GitHub repo
-4. Click Deploy — done in ~1 minute
-5. Vercel gives you a URL like `trade-journal.vercel.app`
-6. Bookmark that on your phone and computer — same login, same data everywhere!
-
----
-
-## Need help?
-The app shows the full Supabase setup guide on the login screen too.
+{
+  "name": "trade-journal",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "@supabase/supabase-js": "^2.39.0",
+    "react-scripts": "5.0.1"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build"
+  },
+  "browserslist": {
+    "production": [">0.2%", "not dead", "not op_mini all"],
+    "development": ["last 1 chrome version"]
+  }
+}
