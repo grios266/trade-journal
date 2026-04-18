@@ -231,7 +231,10 @@ export default function App(){
     const expectancy=rMultiples.length?rMultiples.reduce((a,b)=>a+b,0)/rMultiples.length:null;
     const rrValues=trades.map(t=>calcRR(t)).filter(v=>v!==null);
     const avgRR=rrValues.length?rrValues.reduce((a,b)=>a+b,0)/rrValues.length:null;
-    return{totalPL,wins:wins.length,losses:losses.length,winRate,avgWin,avgLoss,bestTrade,worstTrade,openTrades,byTicker,monthly,total:trades.length,closed:closed.length,expectancy,avgRR,rMultiples};
+    const totalEarnings=wins.reduce((a,b)=>a+b,0);
+    const totalLosses=losses.reduce((a,b)=>a+b,0);
+    const profitFactor=Math.abs(totalLosses)>0?totalEarnings/Math.abs(totalLosses):null;
+    return{totalPL,wins:wins.length,losses:losses.length,winRate,avgWin,avgLoss,bestTrade,worstTrade,openTrades,byTicker,monthly,total:trades.length,closed:closed.length,expectancy,avgRR,rMultiples,totalEarnings,totalLosses,profitFactor};
   },[trades]);
 
   function hf(e){const{name,value}=e.target;setForm(f=>({...f,[name]:value}));}
@@ -377,6 +380,71 @@ export default function App(){
         {tab==="Dashboard"&&(
           <div>
             <div className="section-title">PORTFOLIO OVERVIEW</div>
+
+            {/* EARNINGS VS LOSSES SUMMARY */}
+            <div className="card" style={{marginBottom:14}}>
+              <div style={{fontSize:11,color:"#64748b",letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:14}}>Earnings vs Losses Summary</div>
+
+              {/* Net P&L big number */}
+              <div style={{textAlign:"center",marginBottom:16,padding:"14px 0",borderBottom:"1px solid #1a2540"}}>
+                <div style={{fontSize:11,color:"#64748b",letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:4}}>Net P&L</div>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:"2.8rem",letterSpacing:"0.05em",color:stats.totalPL>=0?"#10b981":"#ef4444",lineHeight:1}}>
+                  {fmt(stats.totalPL)}
+                </div>
+                <div style={{fontSize:11,color:"#64748b",marginTop:4}}>{stats.closed} closed trade{stats.closed!==1?"s":""}</div>
+              </div>
+
+              {/* Earnings vs Losses side by side */}
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+                <div style={{background:"#0a2d1a",border:"1px solid #059669",borderRadius:10,padding:"12px 14px"}}>
+                  <div style={{fontSize:10,color:"#059669",letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:6}}>✅ Total Earnings</div>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:"1.6rem",color:"#10b981",letterSpacing:"0.05em",lineHeight:1}}>{fmt(stats.totalEarnings)}</div>
+                  <div style={{fontSize:11,color:"#4ade80",marginTop:4}}>{stats.wins} winning trade{stats.wins!==1?"s":""}</div>
+                </div>
+                <div style={{background:"#2d0a0a",border:"1px solid #dc2626",borderRadius:10,padding:"12px 14px"}}>
+                  <div style={{fontSize:10,color:"#dc2626",letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:6}}>❌ Total Losses</div>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:"1.6rem",color:"#ef4444",letterSpacing:"0.05em",lineHeight:1}}>{fmt(stats.totalLosses)}</div>
+                  <div style={{fontSize:11,color:"#f87171",marginTop:4}}>{stats.losses} losing trade{stats.losses!==1?"s":""}</div>
+                </div>
+              </div>
+
+              {/* Visual bar showing earnings vs losses proportion */}
+              {(stats.totalEarnings > 0 || stats.totalLosses < 0) && (()=>{
+                const total = stats.totalEarnings + Math.abs(stats.totalLosses);
+                const earnPct = total > 0 ? (stats.totalEarnings / total) * 100 : 50;
+                return(
+                  <div style={{marginBottom:14}}>
+                    <div style={{height:10,borderRadius:5,overflow:"hidden",background:"#1a2540",display:"flex"}}>
+                      <div style={{width:`${earnPct}%`,background:"#10b981",transition:"width 0.6s ease"}}/>
+                      <div style={{flex:1,background:"#ef4444"}}/>
+                    </div>
+                    <div style={{display:"flex",justifyContent:"space-between",marginTop:4}}>
+                      <span style={{fontSize:10,color:"#10b981"}}>{earnPct.toFixed(0)}% earnings</span>
+                      <span style={{fontSize:10,color:"#ef4444"}}>{(100-earnPct).toFixed(0)}% losses</span>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Profit Factor */}
+              {stats.profitFactor!==null&&(
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 14px",background:"#0d1424",borderRadius:8}}>
+                  <div>
+                    <div style={{fontSize:10,color:"#64748b",letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:2}}>Profit Factor</div>
+                    <div style={{fontSize:11,color:"#475569"}}>Earnings ÷ Losses</div>
+                  </div>
+                  <div style={{textAlign:"right"}}>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:"1.8rem",color:stats.profitFactor>=2?"#10b981":stats.profitFactor>=1?"#f59e0b":"#ef4444",letterSpacing:"0.05em",lineHeight:1}}>
+                      {stats.profitFactor.toFixed(2)}
+                    </div>
+                    <div style={{fontSize:10,color:"#64748b",marginTop:2}}>
+                      {stats.profitFactor>=2?"🔥 Excellent":stats.profitFactor>=1.5?"✅ Good":stats.profitFactor>=1?"⚠️ Break even zone":"❌ Losing more than earning"}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
               <StatCard label="Total P&L" value={fmt(stats.totalPL)} cls={stats.totalPL>=0?"pos":"neg"}/>
               <StatCard label="Win Rate" value={pct(stats.winRate)} cls={stats.winRate>=50?"pos":"neg"}/>
