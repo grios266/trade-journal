@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 // ─── PASTE YOUR SUPABASE CREDENTIALS HERE ───────────────────────────────────
 const SUPABASE_URL = "https://xddcxzancmbdzrtljjfb.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhkZGN4emFuY21iZHpydGxqamZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0Njg4MzUsImV4cCI6MjA5MjA0NDgzNX0.ZNRn_9yOHTXcrslU6AodTHTNJ2AeWlBrdIXa6U3Jcxo";
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -553,8 +554,16 @@ export default function App() {
                   <div><label>Premium (per contract)</label><input name="premium" type="number" value={form.premium} onChange={handleForm} placeholder="3.50"/></div>
                   <div><label>Close Premium (if closed)</label><input name="close_premium" type="number" value={form.close_premium} onChange={handleForm} placeholder="1.20"/></div>
                 </>)}
-                <div><label>Stop Loss</label><input name="stop_loss" type="number" value={form.stop_loss} onChange={handleForm} placeholder="145.00"/></div>
-                <div><label>Price Target</label><input name="target" type="number" value={form.target} onChange={handleForm} placeholder="165.00"/></div>
+                <div>
+                  <label>Stop Loss{form.type==="option" && <span style={{color:"#a78bfa",fontWeight:400}}> — premium/contract</span>}</label>
+                  <input name="stop_loss" type="number" value={form.stop_loss} onChange={handleForm} placeholder={form.type==="option"?"1.75":"145.00"}/>
+                  {form.type==="option" && <div style={{fontSize:10,color:"#64748b",marginTop:3}}>Exit if premium drops to this value</div>}
+                </div>
+                <div>
+                  <label>Price Target{form.type==="option" && <span style={{color:"#a78bfa",fontWeight:400}}> — premium/contract</span>}</label>
+                  <input name="target" type="number" value={form.target} onChange={handleForm} placeholder={form.type==="option"?"7.00":"165.00"}/>
+                  {form.type==="option" && <div style={{fontSize:10,color:"#64748b",marginTop:3}}>Take profit if premium reaches this value</div>}
+                </div>
                 <div><label>Fees / Commission</label><input name="fees" type="number" value={form.fees} onChange={handleForm} placeholder="0.65"/></div>
                 <div><label>Status</label><select name="status" value={form.status} onChange={handleForm}><option value="open">Open</option><option value="closed">Closed</option></select></div>
                 <div style={{gridColumn:"1/-1"}}><label>Notes</label><textarea name="notes" value={form.notes} onChange={handleForm} rows={2} placeholder="Trade thesis, setup, market conditions..."/></div>
@@ -735,12 +744,12 @@ export default function App() {
                   <div style={{fontSize:11,color:"#64748b",letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:14}}>Position Sizing Guide</div>
                   {pRisk!==null&&pRisk>0?(
                     <div>
-                      {[0.5,1,2,5].map(p=>{
+                      {[0.5,1,2,5,10].map(p=>{
                         const acct=pRisk/(p/100);
                         return(
                           <div key={p} style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid #1a2540"}}>
-                            <span style={{fontSize:12,color:"#64748b"}}>Risk {p}% of account</span>
-                            <span style={{fontSize:13,fontWeight:600}}>Acct needed: <span style={{color:"#60a5fa"}}>{fmt(acct)}</span></span>
+                            <span style={{fontSize:12,color:p===10?"#f59e0b":"#64748b",fontWeight:p===10?700:400}}>Risk {p}% of account{p===10?" ⚠️":""}</span>
+                            <span style={{fontSize:13,fontWeight:600}}>Acct needed: <span style={{color:p===10?"#f59e0b":"#60a5fa"}}>{fmt(acct)}</span></span>
                           </div>
                         );
                       })}
