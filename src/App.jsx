@@ -133,7 +133,7 @@ function AuthScreen({onAuth}){
       <style>{`@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=Bebas+Neue&display=swap');*{box-sizing:border-box;}`}</style>
       <div style={{width:"100%",maxWidth:440}}>
         <div style={{textAlign:"center",marginBottom:28}}>
-          <div style={{fontFamily:"'Bebas Neue'",fontSize:32,letterSpacing:4,color:"#3b82f6"}}><span style={{color:"#10b981"}}>◈</span> TRADE JOURNAL</div>
+          <div style={{fontFamily:"'Bebas Neue'",fontSize:32,letterSpacing:4,color:"#3b82f6"}}><span style={{color:"#10b981"}}>◈</span> TRADEWiz </div>
           <div style={{fontSize:11,color:"#475569",marginTop:4,letterSpacing:2}}>CLOUD SYNC ENABLED</div>
         </div>
         {notConfigured&&<div style={{background:"#1a1000",border:"1px solid #f59e0b",borderRadius:10,padding:"12px 16px",marginBottom:16,fontSize:12,color:"#f59e0b",lineHeight:1.6}}>⚠️ <b>Setup required:</b> Add your Supabase credentials to App.jsx.</div>}
@@ -353,7 +353,7 @@ export default function App(){
       {/* HEADER */}
       <div style={{background:"#060b14",borderBottom:"1px solid #1e2d4d",padding:"0 16px",display:"flex",alignItems:"center",justifyContent:"space-between",height:52,position:"sticky",top:0,zIndex:50}}>
         <div style={{fontFamily:"'Bebas Neue'",fontSize:22,letterSpacing:3,color:"#3b82f6"}}>
-          <span style={{color:"#10b981"}}>◈</span> TRADE JOURNAL
+          <span style={{color:"#10b981"}}>◈</span> TRADEWiz
         </div>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           {dbLoading&&<span style={{fontSize:11,color:"#3b82f6"}}>↻</span>}
