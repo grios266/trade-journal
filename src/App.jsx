@@ -20,7 +20,8 @@ const initialForm = {
   ticker:"", side:"buy", qty:"", price:"", close_price:"", fees:"0",
   strategy:"Long Call", expiry:"", strike:"", option_type:"call",
   contracts:"", premium:"", close_premium:"", notes:"", status:"open",
-  stop_loss:"", target:""
+  stop_loss:"", target:"", iv_fill:"",
+  strike_leg_0:"", strike_leg_1:"", strike_leg_2:"", strike_leg_3:""
 };
 
 const fmt = n => new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",minimumFractionDigits:2}).format(n);
@@ -133,7 +134,7 @@ function AuthScreen({onAuth}){
       <style>{`@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=Bebas+Neue&display=swap');*{box-sizing:border-box;}`}</style>
       <div style={{width:"100%",maxWidth:440}}>
         <div style={{textAlign:"center",marginBottom:28}}>
-          <div style={{fontFamily:"'Bebas Neue'",fontSize:32,letterSpacing:4,color:"#3b82f6"}}><span style={{color:"#10b981"}}>◈</span> TRADEWiz </div>
+          <div style={{fontFamily:"'Bebas Neue'",fontSize:32,letterSpacing:4,color:"#3b82f6"}}><span style={{color:"#10b981"}}>◈</span> TRADE JOURNAL</div>
           <div style={{fontSize:11,color:"#475569",marginTop:4,letterSpacing:2}}>CLOUD SYNC ENABLED</div>
         </div>
         {notConfigured&&<div style={{background:"#1a1000",border:"1px solid #f59e0b",borderRadius:10,padding:"12px 16px",marginBottom:16,fontSize:12,color:"#f59e0b",lineHeight:1.6}}>⚠️ <b>Setup required:</b> Add your Supabase credentials to App.jsx.</div>}
@@ -353,7 +354,7 @@ export default function App(){
       {/* HEADER */}
       <div style={{background:"#060b14",borderBottom:"1px solid #1e2d4d",padding:"0 16px",display:"flex",alignItems:"center",justifyContent:"space-between",height:52,position:"sticky",top:0,zIndex:50}}>
         <div style={{fontFamily:"'Bebas Neue'",fontSize:22,letterSpacing:3,color:"#3b82f6"}}>
-          <span style={{color:"#10b981"}}>◈</span> TRADEWiz
+          <span style={{color:"#10b981"}}>◈</span> TRADE JOURNAL
         </div>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           {dbLoading&&<span style={{fontSize:11,color:"#3b82f6"}}>↻</span>}
@@ -518,24 +519,80 @@ export default function App(){
                     <div className="field"><label>Close Price</label><input name="close_price" type="number" value={form.close_price} onChange={hf} placeholder="160.00"/></div>
                   </div>
                 </>
-              ):(
-                <>
-                  <div className="field"><label>Strategy</label><select name="strategy" value={form.strategy} onChange={hf}>{OPTION_STRATEGIES.map(s=><option key={s} value={s}>{s}</option>)}</select></div>
-                  <div className="two-col">
-                    <div className="field"><label>Option Type</label><select name="option_type" value={form.option_type} onChange={hf}><option value="call">Call</option><option value="put">Put</option><option value="spread">Spread</option></select></div>
-                    <div className="field"><label>Side</label><select name="side" value={form.side} onChange={hf}><option value="buy">Buy</option><option value="sell">Sell</option></select></div>
-                  </div>
-                  <div className="two-col">
-                    <div className="field"><label>Strike Price</label><input name="strike" type="number" value={form.strike} onChange={hf} placeholder="150"/></div>
-                    <div className="field"><label>Expiry Date</label><input type="date" name="expiry" value={form.expiry} onChange={hf}/></div>
-                  </div>
-                  <div className="two-col">
-                    <div className="field"><label>Contracts</label><input name="contracts" type="number" value={form.contracts} onChange={hf} placeholder="2"/></div>
-                    <div className="field"><label>Premium/contract</label><input name="premium" type="number" value={form.premium} onChange={hf} placeholder="3.50"/></div>
-                  </div>
-                  <div className="field"><label>Close Premium/contract</label><input name="close_premium" type="number" value={form.close_premium} onChange={hf} placeholder="1.20"/></div>
-                </>
-              )}
+              ):(()=>{
+                // Determine leg structure from strategy
+                const s=form.strategy;
+                const is2Leg=["Bull Call Spread","Bear Put Spread","Bull Put Spread","Bear Call Spread","Diagonal Spread","Calendar Spread","PMCC (Poor Man's Covered Call)","Collar"].includes(s);
+                const is4Leg=["Iron Condor","Iron Butterfly","Jade Lizard","Broken Wing Butterfly"].includes(s);
+                const is3Leg=["Ratio Spread"].includes(s);
+                const isMulti=is2Leg||is3Leg||is4Leg;
+
+                // Leg labels per strategy
+                const legLabels={
+                  "Bull Call Spread":    ["+Call (buy)","−Call (sell)"],
+                  "Bear Put Spread":     ["+Put (buy)","−Put (sell)"],
+                  "Bull Put Spread":     ["−Put (sell)","+ Put (buy)"],
+                  "Bear Call Spread":    ["−Call (sell)","+Call (buy)"],
+                  "Diagonal Spread":     ["Long leg","Short leg"],
+                  "Calendar Spread":     ["Front month (sell)","Back month (buy)"],
+                  "PMCC (Poor Man's Covered Call)":["Long LEAP","Short Call"],
+                  "Collar":             ["Long Stock strike","Long Put","Short Call"],
+                  "Iron Condor":        ["Long Put","Short Put","Short Call","Long Call"],
+                  "Iron Butterfly":     ["Long Put","Short Put/Call","Short Put/Call","Long Call"],
+                  "Jade Lizard":        ["Short Put","Short Call (low)","Short Call (high)"],
+                  "Broken Wing Butterfly":["Long Put (low)","Short Puts (mid)","Long Put (high)"],
+                  "Ratio Spread":       ["Long leg","Short leg 1","Short leg 2"],
+                };
+                const legs=legLabels[s]||[];
+
+                return(
+                  <>
+                    <div className="field"><label>Strategy</label><select name="strategy" value={form.strategy} onChange={hf}>{OPTION_STRATEGIES.map(st=><option key={st} value={st}>{st}</option>)}</select></div>
+                    <div className="two-col">
+                      <div className="field"><label>Side</label><select name="side" value={form.side} onChange={hf}><option value="buy">Buy / Debit</option><option value="sell">Sell / Credit</option></select></div>
+                      <div className="field"><label>Expiry Date</label><input type="date" name="expiry" value={form.expiry} onChange={hf}/></div>
+                    </div>
+                    <div className="two-col">
+                      <div className="field"><label>Contracts / Spreads</label><input name="contracts" type="number" value={form.contracts} onChange={hf} placeholder="1"/></div>
+                      <div className="field"><label>Fill Price (net debit/credit)</label><input name="premium" type="number" value={form.premium} onChange={hf} placeholder="3.77"/></div>
+                    </div>
+
+                    {/* MULTI-LEG STRIKES */}
+                    {isMulti?(
+                      <div style={{background:"#0d1424",borderRadius:10,padding:"12px 14px",marginBottom:14}}>
+                        <div style={{fontSize:10,color:"#a78bfa",letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:10}}>⚡ Strikes — {s}</div>
+                        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                          {legs.map((leg,i)=>(
+                            <div key={i} className="field" style={{marginBottom:0}}>
+                              <label style={{color:"#a78bfa"}}>{leg}</label>
+                              <input
+                                name={`strike_leg_${i}`}
+                                type="number"
+                                value={form[`strike_leg_${i}`]||""}
+                                onChange={hf}
+                                placeholder={`Strike ${i+1}`}
+                                style={{border:"1px solid #2d1b69"}}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        {/* Summary line */}
+                        {legs.some((_,i)=>form[`strike_leg_${i}`])&&(
+                          <div style={{marginTop:10,fontSize:11,color:"#a78bfa",background:"#1a0f40",borderRadius:6,padding:"8px 10px"}}>
+                            {legs.map((leg,i)=>form[`strike_leg_${i}`]?`${leg}: $${form[`strike_leg_${i}`]}`:null).filter(Boolean).join(" · ")}
+                          </div>
+                        )}
+                      </div>
+                    ):(
+                      /* Single leg */
+                      <div className="field"><label>Strike Price</label><input name="strike" type="number" value={form.strike} onChange={hf} placeholder="150"/></div>
+                    )}
+
+                    <div className="field"><label>IV at Fill (%)</label><input name="iv_fill" type="number" value={form.iv_fill||""} onChange={hf} placeholder="24"/></div>
+                    <div className="field"><label>Close Premium (net)</label><input name="close_premium" type="number" value={form.close_premium} onChange={hf} placeholder="1.88"/></div>
+                  </>
+                );
+              })()}
 
               <div className="two-col">
                 <div className="field">
@@ -617,7 +674,12 @@ export default function App(){
                   </div>
                   {t.type==="option"&&(
                     <div style={{fontSize:11,color:"#94a3b8",marginBottom:4}}>
-                      {t.strategy} · {t.option_type} @ ${t.strike} · exp {t.expiry}
+                      {t.strategy}
+                      {t.strike_leg_0&&t.strike_leg_1
+                        ? ` · ${[0,1,2,3].map(i=>t[`strike_leg_${i}`]?`$${t[`strike_leg_${i}`]}`:'').filter(Boolean).join(' / ')}`
+                        : t.strike ? ` · $${t.strike}` : ''}
+                      {t.expiry ? ` · exp ${t.expiry}` : ''}
+                      {t.iv_fill ? ` · IV ${t.iv_fill}%` : ''}
                     </div>
                   )}
                   {t.type==="stock"&&(
