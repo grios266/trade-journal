@@ -588,8 +588,11 @@ export default function App(){
                       <div className="field"><label>Strike Price</label><input name="strike" type="number" value={form.strike} onChange={hf} placeholder="150"/></div>
                     )}
 
-                    <div className="field"><label>IV at Fill (%)</label><input name="iv_fill" type="number" value={form.iv_fill||""} onChange={hf} placeholder="24"/></div>
-                    <div className="field"><label>Close Premium (net)</label><input name="close_premium" type="number" value={form.close_premium} onChange={hf} placeholder="1.88"/></div>
+                    <div className="field">
+                      <label>Close Premium — actual exit price</label>
+                      <input name="close_premium" type="number" value={form.close_premium} onChange={hf} placeholder="e.g. 1.88"/>
+                      <div style={{fontSize:10,color:"#64748b",marginTop:4}}>P&L is calculated from this — leave blank if still open</div>
+                    </div>
                   </>
                 );
               })()}
@@ -598,12 +601,12 @@ export default function App(){
                 <div className="field">
                   <label>Stop Loss{form.type==="option"&&<span style={{color:"#a78bfa",fontWeight:400}}> (premium)</span>}</label>
                   <input name="stop_loss" type="number" value={form.stop_loss} onChange={hf} placeholder={form.type==="option"?"1.75":"145.00"}/>
-                  {form.type==="option"&&<div style={{fontSize:10,color:"#64748b",marginTop:4}}>Exit premium level</div>}
+                  {form.type==="option"&&<div style={{fontSize:10,color:"#64748b",marginTop:4}}>For R:R planning only</div>}
                 </div>
                 <div className="field">
                   <label>Target{form.type==="option"&&<span style={{color:"#a78bfa",fontWeight:400}}> (premium)</span>}</label>
                   <input name="target" type="number" value={form.target} onChange={hf} placeholder={form.type==="option"?"7.00":"165.00"}/>
-                  {form.type==="option"&&<div style={{fontSize:10,color:"#64748b",marginTop:4}}>Take profit premium</div>}
+                  {form.type==="option"&&<div style={{fontSize:10,color:"#64748b",marginTop:4}}>For R:R planning only</div>}
                 </div>
               </div>
 
@@ -613,13 +616,16 @@ export default function App(){
               </div>
               <div className="field"><label>Notes</label><textarea name="notes" value={form.notes} onChange={hf} rows={3} placeholder="Trade thesis, setup, market conditions..."/></div>
 
-              {/* Live R:R preview */}
+              {/* Live R:R preview — planning only */}
               {(()=>{const rr=calcRR(form),risk=calcRisk(form),reward=calcReward(form);if(!rr)return null;return(
-                <div style={{marginBottom:14,padding:"12px 14px",background:"#0d1424",borderRadius:8,display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-                  <div><div style={{fontSize:10,color:"#64748b",marginBottom:2}}>RISK</div><span className="neg" style={{fontWeight:700}}>{fmt(risk)}</span></div>
-                  <div><div style={{fontSize:10,color:"#64748b",marginBottom:2}}>REWARD</div><span className="pos" style={{fontWeight:700}}>{fmt(reward)}</span></div>
-                  <div><div style={{fontSize:10,color:"#64748b",marginBottom:2}}>R:R RATIO</div><span className={rr>=2?"pos":rr>=1?"warn":"neg"} style={{fontWeight:700}}>{rr.toFixed(2)}:1</span></div>
-                  <div><div style={{fontSize:10,color:"#64748b",marginBottom:2}}>MIN WIN RATE</div><span className="neu" style={{fontWeight:700}}>{(1/(1+rr)*100).toFixed(1)}%</span></div>
+                <div style={{marginBottom:14,padding:"12px 14px",background:"#0d1424",borderRadius:8}}>
+                  <div style={{fontSize:10,color:"#475569",letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:8}}>⚖ R:R Preview — based on stop/target (planning only, not actual P&L)</div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                    <div><div style={{fontSize:10,color:"#64748b",marginBottom:2}}>MAX RISK</div><span className="neg" style={{fontWeight:700}}>{fmt(risk)}</span></div>
+                    <div><div style={{fontSize:10,color:"#64748b",marginBottom:2}}>MAX REWARD</div><span className="pos" style={{fontWeight:700}}>{fmt(reward)}</span></div>
+                    <div><div style={{fontSize:10,color:"#64748b",marginBottom:2}}>R:R RATIO</div><span className={rr>=2?"pos":rr>=1?"warn":"neg"} style={{fontWeight:700}}>{rr.toFixed(2)}:1</span></div>
+                    <div><div style={{fontSize:10,color:"#64748b",marginBottom:2}}>MIN WIN RATE</div><span className="neu" style={{fontWeight:700}}>{(1/(1+rr)*100).toFixed(1)}%</span></div>
+                  </div>
                 </div>
               );})()}
 
